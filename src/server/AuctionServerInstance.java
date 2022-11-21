@@ -1,18 +1,69 @@
 package server;
 
 import java.rmi.RemoteException;
+import java.util.List;
 import java.util.SortedMap;
+import java.util.TreeMap;
 
-import common.Bidder;
+import common.Auction;
 import common.IAuctionListener;
+import common.Item;
 
 public class AuctionServerInstance extends java.rmi.server.UnicastRemoteObject implements IAuctionServer {
     private static AuctionServerInstance ins = null;
-    private SortedMap<Integer, Bidder> bidders;
-    private SortedMap<Integer, Bidder> auctions;
+    // private SortedMap<Integer, Bidder> bidders;
+    // private SortedMap<Integer, Bidder> auctions;
+    private SortedMap<Integer, Thread> threads;
+    private SortedMap<Integer, Auction> runningAuctions;
+    private List<Auction> finishedAuctions;
+
+    public void finalizeAuction(Auction auction) {
+        System.out.println(
+                "AUCTION ENDED FOR ITEM: " + auction.getItem());
+
+        Thread t = threads.remove(auction.getAuctionId());
+        if (t != null) {
+            try {
+                t.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        runningAuctions.remove(auction.getAuctionId());
+        this.finishedAuctions.add(auction);
+    }
+
+    private void createAuction(int auctionId, Item item, int lifeOfAuction) {
+        Auction auction = new Auction(auctionId, item);
+        Auctioneer auctioneer = new Auctioneer(lifeOfAuction, () -> this.finalizeAuction(auction));
+        Thread t = new Thread(auctioneer);
+        t.start();
+
+        threads.put(auctionId, t);
+        runningAuctions.put(auctionId, auction);
+    }
+
+    private void initializeTestData() {
+        // Creating 4 test auctions
+        Item item1 = new Item("Kubek do kawy", 800);
+        Item item2 = new Item("Samochód opel Vectra", 20);
+        Item item3 = new Item("Łagodne wprowadzenie do algorytmów", 10000);
+        Item item4 = new Item("Poprawka do AKO", 10);
+
+        createAuction(1, item1, 100);
+        createAuction(2, item2, 110);
+        createAuction(3, item3, 120);
+        createAuction(4, item4, 90);
+    }
 
     public AuctionServerInstance() throws java.rmi.RemoteException {
         super();
+        System.out.println("SERVER STARTED");
+        System.out.println("Creating dummy data");
+        this.runningAuctions = new TreeMap<Integer, Auction>();
+        this.threads = new TreeMap<Integer, Thread>();
+        this.initializeTestData();
     }
 
     public static AuctionServerInstance getInstance() {
@@ -51,10 +102,14 @@ public class AuctionServerInstance extends java.rmi.server.UnicastRemoteObject i
     }
 
     @Override
-    public Item getItems() throws RemoteException {
-        // TODO Auto-generated method stub
-        System.out.println("CHCE PRZEDMIOTY AUKCYJNE");
-        return null;
+    public Item[] getItems() throws RemoteException {
+        Item[] items = this.runningAuctions
+            .values()
+            .stream()
+            .map(a -> (Item) a.getItem())
+            .toArray(size -> new Item[size]);
+
+        return items;
     }
 
     @Override

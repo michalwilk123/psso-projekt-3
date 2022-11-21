@@ -7,6 +7,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
 import common.IAuctionListener;
+import common.Item;
 
 import java.awt.event.*;
 import java.rmi.RemoteException;
@@ -63,6 +64,15 @@ public class ClientGui extends JFrame implements ActionListener, IAuctionListene
         super("Client app");
         this.init();
         this.serverInstance = serverInstance;
+        try {
+            Item[] items = serverInstance.getItems();
+            for (Item item : items) {
+                System.out.println(item);
+            }
+        } catch (RemoteException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     public ClientGui() {
