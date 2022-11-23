@@ -1,5 +1,6 @@
 package common;
 
 public interface IAuctionListener {
-    public void notifyAboutAuctions();
+    public String getListenerName();
+    public void notifyAboutAuctions(Item it);
 }

@@ -6,6 +6,15 @@ public class Item implements Serializable{
     private String name;
     private float price;
     private String currentBuyer;
+    private boolean finished = false;
+
+    public boolean isFinished() {
+        return finished;
+    }
+
+    public void setItemSold() {
+        this.finished = true;
+    }
 
     public Item(String name, float price) {
         this.name = name;

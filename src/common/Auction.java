@@ -15,6 +15,16 @@ public class Auction {
     private IAuctionListener buyer;
     private List<IAuctionListener> subscribers;
 
+    public List<IAuctionListener> getSubscribers() {
+        return subscribers;
+    }
+
+    private void notifySubscribers(){
+        for (IAuctionListener listener : subscribers){
+            listener.notifyAboutAuctions(this.item);
+        }
+    }
+
     public int getAuctionId() {
         return auctionId;
     }
@@ -25,6 +35,15 @@ public class Auction {
 
     public void setItem(Item item) {
         this.item = item;
+    }
+
+    public void makeBid(float newPrice, IAuctionListener bidder){
+        if (item.getPrice() >= newPrice){
+            System.out.println("Cannot bid for lower price!");
+        } 
+        
+        this.buyer = bidder;
+        notifySubscribers();
     }
 
     public IAuctionListener getBuyer() {

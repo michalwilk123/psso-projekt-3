@@ -11,39 +11,78 @@ import common.Item;
 
 import java.awt.event.*;
 import java.rmi.RemoteException;
+import java.util.List;
 import java.awt.*;
 
 import server.IAuctionServer;
 
 public class ClientGui extends JFrame implements ActionListener, IAuctionListener {
     IAuctionServer serverInstance;
-    private final int numBids = 10;
+    private final int numBids = 2;
     private JTextField bidderNums[];
     private JTextField itemNums[];
     private JTextField bidAmounts[];
+    
+    private final String name;
+    private JLabel itemLabels[];
+    private JLabel currentPrices[];
+    private JLabel currentBuyers[];
+    private JButton makeBidButtons[];
+
     private JButton makeBids;
     private JButton clearBids;
 
+    private List<ClientItem> itemList;
+
+    private static String generateName(){
+        return "Client" + ( System.currentTimeMillis() / 1000 );
+    }
+
+    private void refreshServerData(){
+        System.out.println("PULLING FROM SERVER");
+        try {
+            Item[] items = serverInstance.getItems();
+            for (Item item : items) {
+                System.out.println(item);
+            }
+        } catch (RemoteException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
+    private void updateAuctions(){
+
+    }
+
     private void init() {
-        setLayout(new GridLayout(numBids + 2, 3));
+        setLayout(new GridLayout(numBids + 2, 4));
 
         // add the column headings
-        add(new JLabel("Item Number"));
-        add(new JLabel("Bidder Number"));
-        add(new JLabel("Bid Amount"));
+        add(new JLabel("Item name"));
+        add(new JLabel("Current Price"));
+        add(new JLabel("Current Buyer"));
+        add(new JLabel("Make a bid"));
 
         // add the Textfield to enter bids
+        itemLabels = new JLabel[numBids];
+        currentPrices = new JLabel[numBids];
+        currentBuyers = new JLabel[numBids];
+        makeBidButtons = new JButton[numBids];
+
         bidderNums = new JTextField[numBids];
         itemNums = new JTextField[numBids];
         bidAmounts = new JTextField[numBids];
 
         for (int count = 0; count < numBids; count++) {
-            itemNums[count] = new JTextField();
-            add(itemNums[count]);
-            bidderNums[count] = new JTextField();
-            add(bidderNums[count]);
-            bidAmounts[count] = new JTextField();
-            add(bidAmounts[count]);
+            itemLabels[count] = new JLabel("Przedmiot 123");
+            add(itemLabels[count]);
+            currentPrices[count] = new JLabel("200");
+            add(currentPrices[count]);
+            currentBuyers[count] = new JLabel("KUPUJACY");
+            add(currentBuyers[count]);
+            makeBidButtons[count] = new JButton("KUP");
+            add(makeBidButtons[count]);
         }
 
         // add the make bid button
@@ -56,27 +95,21 @@ public class ClientGui extends JFrame implements ActionListener, IAuctionListene
         clearBids.addActionListener(this);
         add(clearBids);
 
-        setSize(700, 500);
+        setSize(700, 150 + numBids * 60);
         setVisible(true);
     }
 
     public ClientGui(IAuctionServer serverInstance) {
         super("Client app");
+        this.name = generateName();
         this.init();
         this.serverInstance = serverInstance;
-        try {
-            Item[] items = serverInstance.getItems();
-            for (Item item : items) {
-                System.out.println(item);
-            }
-        } catch (RemoteException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        this.refreshServerData();
     }
 
     public ClientGui() {
         super("Client app");
+        this.name = generateName();
         this.init();
     }
 
@@ -246,12 +279,15 @@ public class ClientGui extends JFrame implements ActionListener, IAuctionListene
 
     public static void main(String[] args) {
         ClientGui clientGui = new ClientGui();
-        System.out.println("dsajdjkasdnska");
     }
 
     @Override
-    public void notifyAboutAuctions() {
-        // TODO Auto-generated method stub
+    public void notifyAboutAuctions(Item it) {
+        this.refreshServerData();
+    }
 
+    @Override
+    public String getListenerName() {
+        return name;
     }
 }

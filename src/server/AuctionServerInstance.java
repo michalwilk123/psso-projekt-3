@@ -2,6 +2,7 @@ package server;
 
 import java.rmi.RemoteException;
 import java.util.List;
+import java.util.Optional;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -28,6 +29,10 @@ public class AuctionServerInstance extends java.rmi.server.UnicastRemoteObject i
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+        }
+
+        for (IAuctionListener listener : auction.getSubscribers()){
+            listener.notifyAboutAuctions(auction.getItem());
         }
 
         runningAuctions.remove(auction.getAuctionId());
@@ -116,6 +121,22 @@ public class AuctionServerInstance extends java.rmi.server.UnicastRemoteObject i
     public void registerListener(IAuctionListener al, String itemName) throws RemoteException {
         // TODO Auto-generated method stub
 
+    }
+
+    @Override
+    public Item getItem(String name) throws RemoteException {
+        Optional<Item> item = this.runningAuctions
+            .values()
+            .stream()
+            .map(a -> (Item) a.getItem())
+            .filter(it  -> it.getName() == name)
+            .findFirst();
+
+        if (!item.isPresent()){
+            throw new RemoteException("Cannot find item: " + name);
+        }
+
+        return item.get();
     }
 
 }
