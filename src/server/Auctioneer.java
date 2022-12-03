@@ -17,8 +17,8 @@ public class Auctioneer implements Runnable {
         System.out.println(
                 "AUCTION STARTED. Waiting " + this.lifeOfAuction + " till end");
         try {
-            Thread.sleep(100 * lifeOfAuction);
-            // Thread.sleep(1000 * lifeOfAuction);
+            // Thread.sleep(100 * lifeOfAuction);
+            Thread.sleep(1000 * 10 * lifeOfAuction);
         } catch (InterruptedException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

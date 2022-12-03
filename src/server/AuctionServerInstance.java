@@ -1,73 +1,81 @@
 package server;
 
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.concurrent.Semaphore;
 
 import common.Auction;
-import common.IAuctionListener;
 import common.Item;
 
 public class AuctionServerInstance extends java.rmi.server.UnicastRemoteObject implements IAuctionServer {
     private static AuctionServerInstance ins = null;
-    // private SortedMap<Integer, Bidder> bidders;
-    // private SortedMap<Integer, Bidder> auctions;
-    private SortedMap<Integer, Thread> threads;
-    private SortedMap<Integer, Auction> runningAuctions;
+    private SortedMap<String, Thread> threads;
+    private SortedMap<String, Auction> runningAuctions;
+    private Item tempItemContainer;
+    private Map<String, Semaphore> polledAuctionConsumers;
     private List<Auction> finishedAuctions;
+    // private List<IAuctionListener> listeners;
+
+    private void notifyClient(String clientName, Item item) {
+        var listener = polledAuctionConsumers.get(clientName);
+        tempItemContainer = item;
+
+        if (listener != null && listener.availablePermits() == 0) {
+            listener.release();
+        }
+    }
 
     public void finalizeAuction(Auction auction) {
         System.out.println(
                 "AUCTION ENDED FOR ITEM: " + auction.getItem());
 
-        Thread t = threads.remove(auction.getAuctionId());
-        if (t != null) {
-            try {
-                t.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+        threads.remove(auction.getItem().getName());
+
+        for (Map.Entry<String, Semaphore> listenerEntry : this.polledAuctionConsumers.entrySet()) {
+            notifyClient(listenerEntry.getKey(), auction.getItem());
         }
 
-        for (IAuctionListener listener : auction.getSubscribers()){
-            listener.notifyAboutAuctions(auction.getItem());
-        }
-
-        runningAuctions.remove(auction.getAuctionId());
+        runningAuctions.remove(auction.getItem().getName());
         this.finishedAuctions.add(auction);
     }
 
-    private void createAuction(int auctionId, Item item, int lifeOfAuction) {
-        Auction auction = new Auction(auctionId, item);
-        Auctioneer auctioneer = new Auctioneer(lifeOfAuction, () -> this.finalizeAuction(auction));
+    private void createAuction(Item item, int lifeOfAuction) {
+        Auction auction = new Auction(item, (clientName) -> notifyClient(clientName, item));
+        Auctioneer auctioneer = new Auctioneer(
+                lifeOfAuction, () -> this.finalizeAuction(auction));
         Thread t = new Thread(auctioneer);
         t.start();
 
-        threads.put(auctionId, t);
-        runningAuctions.put(auctionId, auction);
+        threads.put(item.getName(), t);
+        runningAuctions.put(item.getName(), auction);
     }
 
     private void initializeTestData() {
         // Creating 4 test auctions
-        Item item1 = new Item("Kubek do kawy", 800);
-        Item item2 = new Item("Samochód opel Vectra", 20);
-        Item item3 = new Item("Łagodne wprowadzenie do algorytmów", 10000);
-        Item item4 = new Item("Poprawka do AKO", 10);
+        Item item1 = new Item("Kubek do kawy", "opis", 800, "foo");
+        Item item2 = new Item("Samochód opel Vectra", "opis", 20, "foo");
+        Item item3 = new Item("Łagodne wprowadzenie do algorytmów", "opis", 10000, "foo");
+        Item item4 = new Item("Poprawka do AKO", "dasdsa", 10, "foo");
 
-        createAuction(1, item1, 100);
-        createAuction(2, item2, 110);
-        createAuction(3, item3, 120);
-        createAuction(4, item4, 90);
+        createAuction(item1, 100);
+        createAuction(item2, 110);
+        createAuction(item3, 120);
+        createAuction(item4, 90);
     }
 
     public AuctionServerInstance() throws java.rmi.RemoteException {
         super();
         System.out.println("SERVER STARTED");
         System.out.println("Creating dummy data");
-        this.runningAuctions = new TreeMap<Integer, Auction>();
-        this.threads = new TreeMap<Integer, Thread>();
+        this.runningAuctions = new TreeMap<String, Auction>();
+        this.threads = new TreeMap<String, Thread>();
+        this.finishedAuctions = new ArrayList<>();
+        this.polledAuctionConsumers = new TreeMap<>();
+        // this.listeners = new ArrayList<>();
         this.initializeTestData();
     }
 
@@ -96,47 +104,72 @@ public class AuctionServerInstance extends java.rmi.server.UnicastRemoteObject i
     @Override
     public void placeItemForBid(String ownerName, String itemName, String itemDesc, double startBid, int auctionTime)
             throws RemoteException {
-        // TODO Auto-generated method stub
-
+        Item it = new Item(itemName, itemDesc, startBid, ownerName);
+        createAuction(it, auctionTime);
     }
 
     @Override
     public void bidOnItem(String bidderName, String itemName, double bid) throws RemoteException {
-        // TODO Auto-generated method stub
+        var it = runningAuctions.get(itemName);
 
+        if (it != null) {
+            it.makeBid(bid, bidderName);
+        }
     }
 
     @Override
     public Item[] getItems() throws RemoteException {
         Item[] items = this.runningAuctions
-            .values()
-            .stream()
-            .map(a -> (Item) a.getItem())
-            .toArray(size -> new Item[size]);
+                .values()
+                .stream()
+                .map(a -> (Item) a.getItem())
+                .toArray(size -> new Item[size]);
 
         return items;
     }
 
+    /*
+     * this is a function just to update on regular non essential
+     * operations, like when new item is registered
+     * or auction has finished, does not get fired when item has new bidder
+     */
     @Override
-    public void registerListener(IAuctionListener al, String itemName) throws RemoteException {
-        // TODO Auto-generated method stub
+    public Item registerListener(String lisName) throws RemoteException {
+        System.out.println("Connecting new user: " + lisName);
+        Semaphore s = new Semaphore(1);
 
+        try {
+            s.acquire();
+            this.polledAuctionConsumers.put(lisName, s);
+            System.out.println("Blocking client " + lisName);
+            s.acquire();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("Sending notification to user: " + lisName);
+        return tempItemContainer;
     }
 
     @Override
     public Item getItem(String name) throws RemoteException {
-        Optional<Item> item = this.runningAuctions
-            .values()
-            .stream()
-            .map(a -> (Item) a.getItem())
-            .filter(it  -> it.getName() == name)
-            .findFirst();
+        Item item = this.runningAuctions.get(name).getItem();
 
-        if (!item.isPresent()){
+        if (item == null) {
             throw new RemoteException("Cannot find item: " + name);
         }
 
-        return item.get();
+        return item;
     }
 
+    @Override
+    public void observeItem(String clientName, String itemName) throws RemoteException {
+        Item item = this.runningAuctions.get(itemName).getItem();
+
+        if (!item.getSubscribersNames().contains(clientName)) {
+            item.addSubscriber(clientName);
+        } else {
+            throw new RemoteException("Cannot observe already observed item");
+        }
+    }
 }

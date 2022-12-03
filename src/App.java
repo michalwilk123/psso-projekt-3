@@ -77,7 +77,6 @@ public class App {
         }
 
         ClientGui clientGui = new ClientGui(dc);
-        clientGui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
     }
 

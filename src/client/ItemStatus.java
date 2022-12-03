@@ -3,6 +3,8 @@ package client;
 public enum ItemStatus {
     AVAILABLE,
     ENDED,
-    WON,
-    WATCHING
+    BOUGHT,
+    WATCHING,
+    WINNING,
+    SELLING
 }

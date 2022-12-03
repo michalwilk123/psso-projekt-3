@@ -1,6 +1,6 @@
 
 compile:
-	rm -r ./bin
+	test -d bin && rm -r bin || true
 	mkdir bin
 	find . -name "*.java" -print | xargs javac -d ./bin
 

@@ -1,32 +1,22 @@
 package common;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.rmi.RemoteException;
+import java.util.function.Consumer;
 
 public class Auction {
-    public Auction(int auctionId, Item item) {
-        this.auctionId = auctionId;
+    public Auction(Item item, Consumer<String> notifyCallback) {
         this.item = item;
-        this.subscribers = new ArrayList<IAuctionListener>();
+        this.callback = notifyCallback;
     }
 
-    private int auctionId;
     private Item item;
-    private IAuctionListener buyer;
-    private List<IAuctionListener> subscribers;
-
-    public List<IAuctionListener> getSubscribers() {
-        return subscribers;
-    }
+    // private List<String> subscribersNames;
+    private Consumer<String> callback;
 
     private void notifySubscribers(){
-        for (IAuctionListener listener : subscribers){
-            listener.notifyAboutAuctions(this.item);
+        for (var listener : item.getSubscribersNames()){
+            callback.accept(listener);
         }
-    }
-
-    public int getAuctionId() {
-        return auctionId;
     }
 
     public Item getItem() {
@@ -37,20 +27,21 @@ public class Auction {
         this.item = item;
     }
 
-    public void makeBid(float newPrice, IAuctionListener bidder){
-        if (item.getPrice() >= newPrice){
-            System.out.println("Cannot bid for lower price!");
+    public void makeBid(double newPrice, String bidder) throws RemoteException{
+        if (item.getSubscribersNames().get(0).equals(bidder)){
+            throw new RemoteException("Cannot bid for item you are selling!");
         } 
+
+        if (item.getPrice() >= newPrice){
+            throw new RemoteException("Cannot bid for lower price!");
+        } 
+
+        if (!item.getSubscribersNames().contains(bidder)){
+            item.addSubscriber(bidder);
+        }
         
-        this.buyer = bidder;
+        item.setCurrentBuyer(bidder);
+        item.setPrice(newPrice);
         notifySubscribers();
-    }
-
-    public IAuctionListener getBuyer() {
-        return buyer;
-    }
-
-    public void setBuyer(IAuctionListener buyer) {
-        this.buyer = buyer;
     }
 }

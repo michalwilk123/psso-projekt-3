@@ -3,7 +3,6 @@ package server;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 
 import java.awt.Container;
@@ -27,14 +26,6 @@ public class ServerGui extends JFrame implements ActionListener{
         exitButton.addActionListener (this);
         exitButton.setAlignmentX(CENTER_ALIGNMENT);
         innerContainer.add(exitButton);
-
-        JLabel l = new JLabel("LALALAL");
-        l.setAlignmentX(CENTER_ALIGNMENT);
-        innerContainer.add(l);
-
-        JLabel l2 = new JLabel("djakndjksankdsa");
-        l2.setAlignmentX(CENTER_ALIGNMENT);
-        innerContainer.add(l2);
 
         setSize( 700, 500 );
         setVisible( true );
@@ -69,6 +60,6 @@ public class ServerGui extends JFrame implements ActionListener{
     }
 
     public static void main(String[] args) {
-        ServerGui s = new ServerGui();
+        new ServerGui();
     }
 }
