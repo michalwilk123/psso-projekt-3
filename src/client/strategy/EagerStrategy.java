@@ -5,7 +5,7 @@ import java.rmi.RemoteException;
 import common.Item;
 import server.IAuctionServer;
 
-public class EagerStrategy extends AbstractStrategy implements IStrategy {
+public class EagerStrategy extends AbstractStrategy{
 
     public EagerStrategy(Item item, double maxValue, String ownerName) {
         super(item, maxValue, ownerName);

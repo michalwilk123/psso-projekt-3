@@ -2,7 +2,7 @@ package client.strategy;
 
 import common.Item;
 
-public abstract class AbstractStrategy {
+public abstract class AbstractStrategy implements IStrategy{
     protected Item item;
     protected final double maxValue;
     protected final String ownerName;

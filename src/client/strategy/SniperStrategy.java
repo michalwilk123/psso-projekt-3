@@ -5,7 +5,7 @@ import java.rmi.RemoteException;
 import common.Item;
 import server.IAuctionServer;
 
-public class SniperStrategy extends AbstractStrategy implements IStrategy {
+public class SniperStrategy extends AbstractStrategy {
 
 
     public SniperStrategy(Item item, double maxValue, String ownerName) {
