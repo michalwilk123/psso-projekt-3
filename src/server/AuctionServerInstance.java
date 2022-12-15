@@ -57,10 +57,10 @@ public class AuctionServerInstance extends java.rmi.server.UnicastRemoteObject i
     public void initializeTestData() {
         var currTime = System.currentTimeMillis() / 1000;
         // Creating 4 test auctions
-        Item item1 = new Item("Kubek do kawy", "opis", 800, "foo", currTime + 100);
-        Item item2 = new Item("Samochód opel Vectra", "opis", 20, "foo", currTime + 110);
-        Item item3 = new Item("Łagodne wprowadzenie do algorytmów", "opis", 10000, "foo", currTime + 120);
-        Item item4 = new Item("Poprawka do AKO", "dasdsa", 10, "foo", currTime + 90);
+        Item item1 = new Item("Kubek do kawy", "opis", 800, "foo", currTime + 140);
+        Item item2 = new Item("Samochód opel Vectra", "opis", 20, "foo", currTime + 150);
+        Item item3 = new Item("Łagodne wprowadzenie do algorytmów", "opis", 10000, "foo", currTime + 160);
+        Item item4 = new Item("Poprawka do AKO", "dasdsa", 10, "foo", currTime + 20);
 
         createAuction(item1);
         createAuction(item2);

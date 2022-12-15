@@ -74,9 +74,9 @@ public class ItemRow extends JPanel implements ActionListener {
         this.observeButton = new JButton("Observe");
         observeButton.addActionListener(this);
 
-        this.sniperStrategyButton = new JButton("Set sniper strategy");
+        this.sniperStrategyButton = new JButton("Sniper strategy");
         sniperStrategyButton.addActionListener(this);
-        this.eagerStrategyButton = new JButton("Set eager strategy");
+        this.eagerStrategyButton = new JButton("Eager strategy");
         eagerStrategyButton.addActionListener(this);
 
         this.optionsBox = new JPanel();
