@@ -6,7 +6,9 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JSpinner;
 import javax.swing.JTextField;
+import javax.swing.SpinnerNumberModel;
 
 import client.strategy.EagerStrategy;
 import client.strategy.SniperStrategy;
@@ -56,7 +58,8 @@ public class ClientGui extends JFrame implements ActionListener, IAuctionListene
                                 item.getPrice(),
                                 this.name,
                                 item.getCurrentBuyer(),
-                                item.getSubscribersNames()));
+                                item.getSubscribersNames(),
+                                item.getEolTime()));
 
                 this.strategyScheduler.synchronizeItem(item);
             }
@@ -75,7 +78,8 @@ public class ClientGui extends JFrame implements ActionListener, IAuctionListene
                                 item.getPrice(),
                                 this.name,
                                 item.getCurrentBuyer(),
-                                item.getSubscribersNames()));
+                                item.getSubscribersNames(),
+                                item.getEolTime()));
             }
         }
 
@@ -105,14 +109,28 @@ public class ClientGui extends JFrame implements ActionListener, IAuctionListene
                         }
                     },
                     (strategy) -> {
-                        System.out.println("Strategy chosen: " + strategy);
+                        SpinnerNumberModel sModel = new SpinnerNumberModel(ci.getPrice(), 1,
+                                Double.POSITIVE_INFINITY, 1);
+                        JSpinner spinner = new JSpinner(sModel);
+                        int n = JOptionPane.showConfirmDialog(this,
+                                spinner,
+                                "Set Max Price",
+                                JOptionPane.OK_CANCEL_OPTION);
+
+                        double maxVal;
+                        if (n == JOptionPane.OK_OPTION) {
+                            maxVal = (Double) spinner.getValue();
+                            System.out.println("WARTOSC MAX: " + maxVal);
+                        } else {
+                            return;
+                        }
                         this.strategyScheduler.removeStrategy(ci.getName());
                         if (strategy == StrategyVariants.SNIPER_STRATEGY) {
                             this.strategyScheduler.addStrategy(
-                                    new SniperStrategy(ci));
+                                    new SniperStrategy(ci, maxVal, this.name));
                         } else if (strategy == StrategyVariants.EAGER_STRATEGY) {
                             this.strategyScheduler.addStrategy(
-                                    new EagerStrategy(ci));
+                                    new EagerStrategy(ci, maxVal, this.name));
                         }
                     },
                     this.name);
@@ -123,7 +141,7 @@ public class ClientGui extends JFrame implements ActionListener, IAuctionListene
         rowsLayout.revalidate();
         rowsLayout.repaint();
         if (oldSize != itemList.size()) {
-            setSize(800, 180 + this.itemRows.size() * 40);
+            setSize(850, 180 + this.itemRows.size() * 40);
         }
     }
 
@@ -256,7 +274,8 @@ public class ClientGui extends JFrame implements ActionListener, IAuctionListene
                             (float) (10.0 + i),
                             "aaaaa1",
                             "aaaaa" + i,
-                            Arrays.asList(new String[] { "creator" })));
+                            Arrays.asList(new String[] { "creator" }),
+                            System.currentTimeMillis() / 1000 + 200));
         }
 
         clientGui.setItemList(lci);

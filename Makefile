@@ -7,5 +7,8 @@ compile:
 server: compile
 	java --enable-preview -XX:+ShowCodeDetailsInExceptionMessages -cp bin/ App server
 
+serverh: compile
+	java --enable-preview -XX:+ShowCodeDetailsInExceptionMessages -cp bin/ App server headless
+
 client:
 	java --enable-preview -XX:+ShowCodeDetailsInExceptionMessages -cp bin/ App client

@@ -20,6 +20,7 @@ public class ItemRow extends JPanel implements ActionListener {
     private JLabel itemNameLabel;
     private JLabel currentBuyerLabel;
     private JLabel currentPriceLabel;
+    private JLabel eolLabel;
     private JPanel optionsBox;
     private JPanel strategyPanel;
     private JSpinner bidChooser;
@@ -34,7 +35,7 @@ public class ItemRow extends JPanel implements ActionListener {
     private Color bgColor;
     private JPanel buttonOptionsBox;
 
-    private static boolean areWeCurrentBuyer(ClientItem item, String clientName){
+    private static boolean areWeCurrentBuyer(ClientItem item, String clientName) {
         return clientName.equals(item.getCurrentBuyer());
     }
 
@@ -49,22 +50,24 @@ public class ItemRow extends JPanel implements ActionListener {
         this.onObserveButtonClick = onObserveButtonClick;
 
         this.itemNameLabel = new JLabel(
-            "<html>" + 
-            item.getName() + 
-            " - " + 
-            item.getDescription() + 
-            "</html>"
-        );
+                "<html>" +
+                        item.getName() +
+                        " - " +
+                        item.getDescription() +
+                        "</html>");
+        this.eolLabel = new JLabel(
+                Long.toString(item.getEolTime() - System.currentTimeMillis() / 1000));
+
         this.currentBuyerLabel = new JLabel(
                 areWeCurrentBuyer(item, clientName)
                         ? "THIS CLIENT"
                         : item.getCurrentBuyer());
         this.currentPriceLabel = new JLabel(String.valueOf(item.getPrice()));
 
-        this.setLayout(new GridLayout(1, 5));
+        this.setLayout(new GridLayout(1, 6));
 
         SpinnerModel model = new SpinnerNumberModel(
-            item.getPrice(), 1, Float.POSITIVE_INFINITY, 1);
+                item.getPrice(), 1, Float.POSITIVE_INFINITY, 1);
         this.bidChooser = new JSpinner(model);
         this.makeBidButton = new JButton("Confirm");
         makeBidButton.addActionListener(this);
@@ -81,7 +84,7 @@ public class ItemRow extends JPanel implements ActionListener {
 
         this.buttonOptionsBox = new JPanel();
         this.buttonOptionsBox.setLayout(
-            new BoxLayout(buttonOptionsBox, BoxLayout.Y_AXIS));
+                new BoxLayout(buttonOptionsBox, BoxLayout.Y_AXIS));
         this.buttonOptionsBox.add(makeBidButton);
         this.buttonOptionsBox.add(observeButton);
 
@@ -90,7 +93,7 @@ public class ItemRow extends JPanel implements ActionListener {
 
         this.strategyPanel = new JPanel();
         this.strategyPanel.setLayout(
-            new BoxLayout(strategyPanel, BoxLayout.Y_AXIS));
+                new BoxLayout(strategyPanel, BoxLayout.Y_AXIS));
         this.strategyPanel.add(sniperStrategyButton);
         this.strategyPanel.add(eagerStrategyButton);
 
@@ -124,6 +127,7 @@ public class ItemRow extends JPanel implements ActionListener {
         this.optionsBox.setBackground(bgColor);
 
         this.add(itemNameLabel);
+        this.add(eolLabel);
         this.add(currentBuyerLabel);
         this.add(currentPriceLabel);
         this.add(optionsBox);
@@ -140,10 +144,10 @@ public class ItemRow extends JPanel implements ActionListener {
             this.onObserveButtonClick.run();
         } else if (event.getSource() == this.sniperStrategyButton) {
             this.onStrategyButtonClick.accept(
-                StrategyVariants.SNIPER_STRATEGY);
+                    StrategyVariants.SNIPER_STRATEGY);
         } else if (event.getSource() == this.eagerStrategyButton) {
             this.onStrategyButtonClick.accept(
-                StrategyVariants.EAGER_STRATEGY);
+                    StrategyVariants.EAGER_STRATEGY);
         }
     }
 }

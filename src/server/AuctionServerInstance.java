@@ -43,10 +43,10 @@ public class AuctionServerInstance extends java.rmi.server.UnicastRemoteObject i
         this.finishedAuctions.add(auction);
     }
 
-    private void createAuction(Item item, int lifeOfAuction) {
+    private void createAuction(Item item) {
         Auction auction = new Auction(item, (clientName) -> notifyClient(clientName, item));
         Auctioneer auctioneer = new Auctioneer(
-                lifeOfAuction, () -> this.finalizeAuction(auction));
+                (int) (item.getEolTime() - System.currentTimeMillis() / 1000), () -> this.finalizeAuction(auction));
         Thread t = new Thread(auctioneer);
         t.start();
 
@@ -54,17 +54,18 @@ public class AuctionServerInstance extends java.rmi.server.UnicastRemoteObject i
         runningAuctions.put(item.getName(), auction);
     }
 
-    private void initializeTestData() {
+    public void initializeTestData() {
+        var currTime = System.currentTimeMillis() / 1000;
         // Creating 4 test auctions
-        Item item1 = new Item("Kubek do kawy", "opis", 800, "foo");
-        Item item2 = new Item("Samochód opel Vectra", "opis", 20, "foo");
-        Item item3 = new Item("Łagodne wprowadzenie do algorytmów", "opis", 10000, "foo");
-        Item item4 = new Item("Poprawka do AKO", "dasdsa", 10, "foo");
+        Item item1 = new Item("Kubek do kawy", "opis", 800, "foo", currTime + 100);
+        Item item2 = new Item("Samochód opel Vectra", "opis", 20, "foo", currTime + 110);
+        Item item3 = new Item("Łagodne wprowadzenie do algorytmów", "opis", 10000, "foo", currTime + 120);
+        Item item4 = new Item("Poprawka do AKO", "dasdsa", 10, "foo", currTime + 90);
 
-        createAuction(item1, 100);
-        createAuction(item2, 110);
-        createAuction(item3, 120);
-        createAuction(item4, 90);
+        createAuction(item1);
+        createAuction(item2);
+        createAuction(item3);
+        createAuction(item4);
     }
 
     public AuctionServerInstance() throws java.rmi.RemoteException {
@@ -75,11 +76,10 @@ public class AuctionServerInstance extends java.rmi.server.UnicastRemoteObject i
         this.threads = new TreeMap<String, Thread>();
         this.finishedAuctions = new ArrayList<>();
         this.polledAuctionConsumers = new TreeMap<>();
-        // this.listeners = new ArrayList<>();
-        this.initializeTestData();
+        // this.initializeTestData();
     }
 
-    public static AuctionServerInstance getInstance() {
+    public static synchronized AuctionServerInstance getInstance() {
         if (ins == null) {
             try {
                 ins = new AuctionServerInstance();
@@ -104,8 +104,10 @@ public class AuctionServerInstance extends java.rmi.server.UnicastRemoteObject i
     @Override
     public void placeItemForBid(String ownerName, String itemName, String itemDesc, double startBid, int auctionTime)
             throws RemoteException {
-        Item it = new Item(itemName, itemDesc, startBid, ownerName);
-        createAuction(it, auctionTime);
+        Item it = new Item(
+                itemName, itemDesc, startBid, ownerName,
+                System.currentTimeMillis() / 1000 + auctionTime);
+        createAuction(it);
     }
 
     @Override

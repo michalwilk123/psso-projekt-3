@@ -14,6 +14,7 @@ public class Item implements Serializable{
     private double price;
     private String currentBuyer;
     private List<String> subscribersNames;
+    private final long eolTime;
 
     public List<String> getSubscribersNames() {
         return subscribersNames;
@@ -29,19 +30,21 @@ public class Item implements Serializable{
         this.finished = true;
     }
 
-    public Item(String name, String description, double price, String seller) {
+    public Item(String name, String description, double price, String seller, long eol) {
         this.name = name;
         this.description = description;
         this.price = price;
         this.subscribersNames = new ArrayList<String>();
         this.subscribersNames.add(seller);
+        this.eolTime = eol;
     }
 
-    public Item(String name, String description, double price, List<String> subs) {
+    public Item(String name, String description, double price, List<String> subs, long eol) {
         this.name = name;
         this.description = description;
         this.price = price;
         this.subscribersNames = subs;
+        this.eolTime = eol;
     }
     
     @Override
@@ -76,5 +79,9 @@ public class Item implements Serializable{
 
     public boolean equals(Item it){
         return this.name.equals(it.getName());
+    }
+
+    public long getEolTime() {
+        return eolTime;
     }
 }

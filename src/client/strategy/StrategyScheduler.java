@@ -50,10 +50,9 @@ public class StrategyScheduler implements Runnable{
     @Override
     public void run() {
         while (!isSchedulerStopped.get()) {
-            Long currTime = System.currentTimeMillis() / 1000;
             synchronized (strategies) {
                 strategies.forEach((it) -> {
-                    if (it.isCallbackRunning(currTime)) {
+                    if (it.isCallbackRunning()) {
                         it.runAction(server);
                     }
                 });

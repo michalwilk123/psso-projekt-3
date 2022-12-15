@@ -4,7 +4,7 @@ import common.Item;
 import server.IAuctionServer;
 
 public interface IStrategy {
-    public boolean isCallbackRunning(long currentTimeSeconds);
+    public boolean isCallbackRunning();
     public void runAction(IAuctionServer server);
     public String getIdentifier();
     public Item getItem();

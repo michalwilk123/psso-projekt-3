@@ -12,8 +12,8 @@ public class ClientItem extends Item {
     }
 
     public ClientItem(String name, String desc, double price, String clientName,
-            String buyer, List<String> subs) {
-        super(name, desc, price, subs);
+            String buyer, List<String> subs, long eol) {
+        super(name, desc, price, subs, eol);
         this.setCurrentBuyer(buyer);
 
         System.out.println("CURRENTLY WATCHING: " + this.getSubscribersNames().size());
